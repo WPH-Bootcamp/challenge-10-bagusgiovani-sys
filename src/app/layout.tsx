@@ -1,20 +1,18 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+// app/layout.tsx
+import { Inter } from "next/font/google";
 import "./globals.css";
+import type { Metadata } from "next";
+import StoreProvider from "@/store/provider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-inter",
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
 });
 
 export const metadata: Metadata = {
-  title: "Blog App Challenge",
-  description: "Blog Application Challenge - Next.js",
+  title: "Challenge 10 -  Bagus Giovani ",
+  description: "Blog App Challenge - Next.js",
 };
 
 export default function RootLayout({
@@ -24,11 +22,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${inter.variable} antialiased`}>
+        <StoreProvider>
+          {children}
+        </StoreProvider>
       </body>
     </html>
   );
 }
+
+
