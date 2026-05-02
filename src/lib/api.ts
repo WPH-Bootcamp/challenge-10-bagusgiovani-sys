@@ -5,11 +5,7 @@
 
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-// API Base URL from environment variable
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://be-blg-production.up.railway.app/api';
-
-// Add this to debug
-console.log('API_BASE_URL:', API_BASE_URL);
 
 /**
  * Create axios instance with default config
@@ -113,15 +109,14 @@ export const getAuthToken = (): string | null => {
 export const setAuthToken = (token: string): void => {
   if (typeof window !== 'undefined') {
     localStorage.setItem('token', token);
+    document.cookie = `token=${token}; path=/; SameSite=Lax`;
   }
 };
 
-/**
- * Helper: Remove auth token
- */
 export const removeAuthToken = (): void => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('token');
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   }
 };
 

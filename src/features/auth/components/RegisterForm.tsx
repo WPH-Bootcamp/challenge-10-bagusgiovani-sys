@@ -1,29 +1,15 @@
-// features/auth/components/RegisterForm.tsx
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { registerUser } from '../authSlice';
 import {
-  setRegisterName,
-  setRegisterEmail,
-  setRegisterPassword,
-  setRegisterConfirmPassword,
-  toggleRegisterPasswordVisibility,
-  toggleRegisterConfirmPasswordVisibility,
-  setRegisterFieldTouched,
-  setRegisterNameError,
-  setRegisterEmailError,
-  setRegisterPasswordError,
-  setRegisterConfirmPasswordError,
-  registerUser,
-} from '../authSlice';
-import { 
-  getNameError, 
-  getEmailError, 
-  getPasswordError, 
-  getConfirmPasswordError 
+  getNameError,
+  getEmailError,
+  getPasswordError,
+  getConfirmPasswordError,
 } from '@/utils/validation';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
@@ -33,113 +19,49 @@ import ErrorMessage from '@/components/ui/ErrorMessage';
 export default function RegisterForm() {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  
-  // Get client state from Redux
-  const {
-    name,
-    email,
-    password,
-    confirmPassword,
-    nameError,
-    emailError,
-    passwordError,
-    confirmPasswordError,
-    showPassword,
-    showConfirmPassword,
-    touched,
-  } = useAppSelector((state) => state.auth.registerForm);
-  
-  // Get server state from Redux (YOUR EXISTING STATE)
   const { isLoading, error: serverError } = useAppSelector((state) => state.auth);
 
-  // Handlers
-  const handleNameChange = (value: string) => {
-    dispatch(setRegisterName(value));
-  };
-
-  const handleEmailChange = (value: string) => {
-    dispatch(setRegisterEmail(value));
-  };
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [touched, setTouched] = useState({
+    name: false,
+    email: false,
+    password: false,
+    confirmPassword: false,
+  });
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
 
   const handlePasswordChange = (value: string) => {
-    dispatch(setRegisterPassword(value));
-    // Re-validate confirm password if it's already filled
+    setPassword(value);
     if (confirmPassword) {
-      const error = getConfirmPasswordError(value, confirmPassword);
-      dispatch(setRegisterConfirmPasswordError(error));
+      setConfirmPasswordError(getConfirmPasswordError(value, confirmPassword));
     }
-  };
-
-  const handleConfirmPasswordChange = (value: string) => {
-    dispatch(setRegisterConfirmPassword(value));
-  };
-
-  const handleNameBlur = () => {
-    dispatch(setRegisterFieldTouched('name'));
-    const error = getNameError(name);
-    dispatch(setRegisterNameError(error));
-  };
-
-  const handleEmailBlur = () => {
-    dispatch(setRegisterFieldTouched('email'));
-    const error = getEmailError(email);
-    dispatch(setRegisterEmailError(error));
-  };
-
-  const handlePasswordBlur = () => {
-    dispatch(setRegisterFieldTouched('password'));
-    const error = getPasswordError(password);
-    dispatch(setRegisterPasswordError(error));
-  };
-
-  const handleConfirmPasswordBlur = () => {
-    dispatch(setRegisterFieldTouched('confirmPassword'));
-    const error = getConfirmPasswordError(password, confirmPassword);
-    dispatch(setRegisterConfirmPasswordError(error));
-  };
-
-  const handleTogglePassword = () => {
-    dispatch(toggleRegisterPasswordVisibility());
-  };
-
-  const handleToggleConfirmPassword = () => {
-    dispatch(toggleRegisterConfirmPasswordVisibility());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTouched({ name: true, email: true, password: true, confirmPassword: true });
 
-    // Mark all fields as touched
-    dispatch(setRegisterFieldTouched('name'));
-    dispatch(setRegisterFieldTouched('email'));
-    dispatch(setRegisterFieldTouched('password'));
-    dispatch(setRegisterFieldTouched('confirmPassword'));
+    const nameErr = getNameError(name);
+    const emailErr = getEmailError(email);
+    const passwordErr = getPasswordError(password);
+    const confirmErr = getConfirmPasswordError(password, confirmPassword);
 
-    // Validate all fields using YOUR validation utils
-    const nameValidationError = getNameError(name);
-    const emailValidationError = getEmailError(email);
-    const passwordValidationError = getPasswordError(password);
-    const confirmPasswordValidationError = getConfirmPasswordError(password, confirmPassword);
+    setNameError(nameErr);
+    setEmailError(emailErr);
+    setPasswordError(passwordErr);
+    setConfirmPasswordError(confirmErr);
 
-    dispatch(setRegisterNameError(nameValidationError));
-    dispatch(setRegisterEmailError(emailValidationError));
-    dispatch(setRegisterPasswordError(passwordValidationError));
-    dispatch(setRegisterConfirmPasswordError(confirmPasswordValidationError));
+    if (nameErr || emailErr || passwordErr || confirmErr) return;
 
-    // If there are validation errors, don't submit
-    if (
-      nameValidationError ||
-      emailValidationError ||
-      passwordValidationError ||
-      confirmPasswordValidationError
-    ) {
-      return;
-    }
-
-    // Call YOUR EXISTING registerUser thunk
     const result = await dispatch(registerUser({ name, email, password }));
-    
-    // If registration successful, redirect to login
     if (registerUser.fulfilled.match(result)) {
       router.push('/login');
     }
@@ -147,69 +69,59 @@ export default function RegisterForm() {
 
   return (
     <Card>
-      {/* Title */}
       <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-6">
         Sign Up
       </h1>
 
-      {/* Server Error (from API) */}
-      {serverError && (
-        <ErrorMessage message={serverError} className="mb-4" />
-      )}
+      {serverError && <ErrorMessage message={serverError} className="mb-4" />}
 
-      {/* Form */}
       <form onSubmit={handleSubmit} noValidate>
-        {/* Name Input */}
         <Input
           label="Name"
           type="text"
           placeholder="Enter your name"
           value={name}
-          onChange={handleNameChange}
-          onBlur={handleNameBlur}
+          onChange={setName}
+          onBlur={() => { setTouched((t) => ({ ...t, name: true })); setNameError(getNameError(name)); }}
           error={touched.name ? nameError : null}
         />
 
-        {/* Email Input */}
         <Input
           label="Email"
           type="email"
           placeholder="Enter your email"
           value={email}
-          onChange={handleEmailChange}
-          onBlur={handleEmailBlur}
+          onChange={setEmail}
+          onBlur={() => { setTouched((t) => ({ ...t, email: true })); setEmailError(getEmailError(email)); }}
           error={touched.email ? emailError : null}
         />
 
-        {/* Password Input */}
         <Input
           label="Password"
           type="password"
           placeholder="Enter your password"
           value={password}
           onChange={handlePasswordChange}
-          onBlur={handlePasswordBlur}
+          onBlur={() => { setTouched((t) => ({ ...t, password: true })); setPasswordError(getPasswordError(password)); }}
           error={touched.password ? passwordError : null}
           showPasswordToggle
-          onTogglePassword={handleTogglePassword}
+          onTogglePassword={() => setShowPassword((v) => !v)}
           showPassword={showPassword}
         />
 
-        {/* Confirm Password Input */}
         <Input
           label="Confirm Password"
           type="password"
           placeholder="Enter your confirm password"
           value={confirmPassword}
-          onChange={handleConfirmPasswordChange}
-          onBlur={handleConfirmPasswordBlur}
+          onChange={setConfirmPassword}
+          onBlur={() => { setTouched((t) => ({ ...t, confirmPassword: true })); setConfirmPasswordError(getConfirmPasswordError(password, confirmPassword)); }}
           error={touched.confirmPassword ? confirmPasswordError : null}
           showPasswordToggle
-          onTogglePassword={handleToggleConfirmPassword}
+          onTogglePassword={() => setShowConfirmPassword((v) => !v)}
           showPassword={showConfirmPassword}
         />
 
-        {/* Submit Button */}
         <Button
           type="submit"
           variant="primary"
@@ -221,7 +133,6 @@ export default function RegisterForm() {
           Register
         </Button>
 
-        {/* Login Link */}
         <p className="text-center text-sm text-[var(--text-secondary)] mt-4">
           Already have an account?{' '}
           <Link

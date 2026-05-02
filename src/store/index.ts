@@ -17,7 +17,10 @@ export const store = configureStore({
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: false,
+      serializableCheck: {
+        // File objects from image/avatar uploads are not serializable
+        ignoredActionPaths: ['meta.arg.image', 'meta.arg.avatar'],
+      },
     }),
 });
 
